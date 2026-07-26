@@ -1,5 +1,5 @@
 ---
-status: pending
+status: hired
 proposed_by: council-critic
 char_name: Theo
 trait: calm under fire, disarms angry reviews without groveling
