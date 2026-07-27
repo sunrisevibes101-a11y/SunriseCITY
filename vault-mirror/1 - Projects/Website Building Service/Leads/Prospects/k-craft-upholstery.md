@@ -1,5 +1,5 @@
 ---
-status: pending
+status: approved
 business_name: K-Craft Upholstery
 location: Tea, South Dakota
 industry: Furniture upholstery/reupholstery

@@ -1,5 +1,5 @@
 ---
-status: pending
+status: approved
 business_name: Rubi Construction and Remodeling LLC
 location: Columbia, Missouri
 industry: Construction and remodeling contractor

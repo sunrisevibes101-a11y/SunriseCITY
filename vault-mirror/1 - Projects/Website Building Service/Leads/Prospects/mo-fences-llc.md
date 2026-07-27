@@ -1,5 +1,5 @@
 ---
-status: pending
+status: approved
 business_name: MO Fences LLC
 location: Columbia, Missouri
 industry: Fencing contractor

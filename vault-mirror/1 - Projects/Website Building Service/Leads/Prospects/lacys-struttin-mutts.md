@@ -1,5 +1,5 @@
 ---
-status: pending
+status: approved
 business_name: Lacy's Struttin' Mutts
 location: Tea, South Dakota
 industry: Pet grooming, daycare, and boarding

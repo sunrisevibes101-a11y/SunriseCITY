@@ -1,5 +1,5 @@
 ---
-status: pending
+status: approved
 business_name: Wells Drywall and Construction LLC
 location: Jefferson City, Missouri
 industry: Drywall, construction, and painting contractor
