@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rex &amp; Roam — Mobile Dog Grooming</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="hero">
+    <nav>
+      <div class="logo">🐾 Rex &amp; Roam</div>
+      <a class="nav-cta" href="#book">Book a slot</a>
+    </nav>
+    <div class="hero-content">
+      <h1>No leash. No car ride. No waiting room.<br>Just your driveway.</h1>
+      <p class="subhead">Mobile dog grooming that comes to you — full service, $65–95, right where you park.</p>
+      <a class="btn-primary" href="#book">Check availability</a>
+    </div>
+  </header>
+
+  <section class="section services">
+    <h2>What's included</h2>
+    <div class="cards">
+      <div class="card">
+        <h3>Bath &amp; blow-dry</h3>
+        <p>Full wash, de-shed treatment, and a proper blow-dry — no rushed towel job.</p>
+      </div>
+      <div class="card">
+        <h3>Cut &amp; style</h3>
+        <p>Breed-standard or your preferred trim, done in the van's climate-controlled bay.</p>
+      </div>
+      <div class="card">
+        <h3>Nails &amp; ears</h3>
+        <p>Nail trim, ear cleaning, and a quick health check every visit.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section why">
+    <h2>Why owners switch</h2>
+    <p>The haircut was never the hard part — the car ride was. No carrier, no waiting room full of nervous dogs, no drive sandwiched around the appointment. We pull into your driveway and your dog never leaves a place that smells like home.</p>
+  </section>
+
+  <section class="section book" id="book">
+    <h2>Check availability</h2>
+    <p>Leave your info and we'll text you open slots in your neighborhood. This is a demo form — real submissions save to a local file, nothing is sent anywhere.</p>
+    <form id="lead-form">
+      <input type="text" name="name" placeholder="Your name" required>
+      <input type="tel" name="phone" placeholder="Phone number" required>
+      <input type="text" name="neighborhood" placeholder="Neighborhood / area" required>
+      <textarea name="message" placeholder="Dog's breed, size, or anything we should know (optional)"></textarea>
+      <button type="submit" class="btn-primary">Request a slot</button>
+    </form>
+    <p id="form-status" class="form-status"></p>
+  </section>
+
+  <footer>
+    <p>Rex &amp; Roam — demo site built to prove the pipeline works. Not a real business.</p>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Command Center</title>
+<link rel="stylesheet" href="style.css">
+<script type="importmap">
+{
+  "imports": {
+    "three": "./vendor/three.module.js",
+    "three/addons/controls/OrbitControls.js": "./vendor/OrbitControls.js"
+  }
+}
+</script>
+</head>
+<body>
+  <header>
+    <div class="brand">🧠 Command Center</div>
+    <div class="status" id="agent-status">Agent core: <span class="dot"></span> checking...</div>
+  </header>
+
+  <div class="app-layout">
+    <nav class="sidebar">
+      <button class="tab-btn active" data-tab="overview">🏙️ Overview</button>
+      <button class="tab-btn" data-tab="content">📣 Advertising &amp; Content</button>
+      <button class="tab-btn" data-tab="money">💵 Money</button>
+      <button class="tab-btn" data-tab="leads">📋 Leads</button>
+      <button class="tab-btn" data-tab="subagents">🧑‍💼 Subagents</button>
+      <button class="tab-btn" data-tab="activity">⚙️ Activity &amp; Settings</button>
+    </nav>
+
+    <main class="tab-content">
+      <section class="tab-panel active" id="tab-overview">
+        <div class="city-wrap">
+          <div class="chips-bar" id="chips-bar"></div>
+          <canvas id="city-canvas"></canvas>
+          <canvas id="city-canvas-2d" hidden></canvas>
+          <div class="city-hint" id="city-hint">Drag to look around · scroll to zoom · click a building or character</div>
+          <div class="city-tooltip" id="city-tooltip" hidden></div>
+          <button class="walk-toggle" id="walk-toggle">🚶 Join as character</button>
+          <button class="fp-toggle" id="fp-toggle" hidden>👁️ First person</button>
+          <div class="dialogue-box" id="dialogue-box" hidden></div>
+          <form class="instruct-bar" id="instruct-bar">
+            <input id="instruct-input" placeholder="Tell the team what to do... (they'll see it next session)" autocomplete="off">
+            <button type="submit">Send</button>
+          </form>
+          <div class="instruct-status" id="instruct-status" hidden></div>
+          <div class="interior-panel" id="interior-panel" hidden>
+            <div class="interior-header">
+              <span id="interior-title">Inside</span>
+              <button id="interior-leave">Leave</button>
+            </div>
+            <div class="interior-body" id="interior-body"></div>
+          </div>
+        </div>
+        <section class="vitals" id="vitals"></section>
+        <section class="panel queue" style="margin:0 20px 20px">
+          <h3>Waiting on you (approvals &amp; hires)</h3>
+          <div class="queue-list" id="queue-list-front"><div class="empty">Loading...</div></div>
+        </section>
+      </section>
+
+      <section class="tab-panel" id="tab-content">
+        <h2>Advertising &amp; Content</h2>
+        <div class="links-row" id="content-links"></div>
+        <p class="note">Every batch below is a real file in the vault. No posting integration is connected, so nothing auto-posts — when you post one yourself, hit “Mark as posted” and it's logged live below.</p>
+        <h3>Posted — live log</h3>
+        <div id="posted-list"><div class="empty">Loading...</div></div>
+        <h3 style="margin-top:20px">Drafted batches</h3>
+        <div id="content-list"><div class="empty">Loading...</div></div>
+      </section>
+
+      <section class="tab-panel" id="tab-money">
+        <h2>Money</h2>
+        <div class="links-row" id="money-links"></div>
+        <div class="notice-box" id="money-notice"></div>
+        <h3>Revenue streams</h3>
+        <div id="revenue-list"></div>
+      </section>
+
+      <section class="tab-panel" id="tab-leads">
+        <h2>Leads</h2>
+        <p class="note">Live spreadsheet — lead-scout writes new prospects here automatically; inbound form leads land here too. Nothing is contacted until you approve it in Subagents.</p>
+        <h3>Prospects &amp; inbound leads — all projects</h3>
+        <div class="table-wrap">
+          <table class="leads-table" id="leads-table">
+            <thead>
+              <tr><th>Business</th><th>Project</th><th>Location</th><th>Status</th><th>Detail</th><th>Source</th></tr>
+            </thead>
+            <tbody id="leads-table-body"><tr><td colspan="6" class="empty">Loading...</td></tr></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="tab-panel" id="tab-subagents">
+        <h2>Subagents</h2>
+        <div class="panel roster">
+          <h3>Core Roster</h3>
+          <div class="roster-list" id="roster-list"></div>
+          <p class="note">Real files in <code>~/.claude/agents/</code>, run via Claude Code.</p>
+        </div>
+        <div class="panel queue" style="margin-top:16px">
+          <h3>Waiting on you (approvals &amp; hires)</h3>
+          <div class="queue-list" id="queue-list"><div class="empty">Loading...</div></div>
+        </div>
+      </section>
+
+      <section class="tab-panel" id="tab-activity">
+        <h2>Activity &amp; Settings</h2>
+        <div class="panel activity" style="margin-bottom:16px">
+          <h3>Recent activity — all projects</h3>
+          <div class="activity-list" id="activity-list"><div class="empty">Loading...</div></div>
+        </div>
+        <div class="panel projects">
+          <h3>Projects</h3>
+          <div class="projects-list" id="projects-list"><div class="empty">Loading...</div></div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <footer>
+    <p>Reads live from <code>~/.claude/agents</code>, <code>~/.claude/skills</code>, and every project folder in the Obsidian vault. Nothing here auto-posts or auto-spends — approvals are logged, not executed elsewhere.</p>
+  </footer>
+
+  <script src="app.js"></script>
+  <script src="city2d.js"></script>
+  <script type="module" src="city.js"></script>
+</body>
+</html>
