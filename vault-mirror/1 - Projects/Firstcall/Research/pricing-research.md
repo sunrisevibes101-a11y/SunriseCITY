@@ -1,6 +1,6 @@
-# Full-line pricing research (2026-07-26)
+# Full-line pricing research (2026-07-26) — CONFIRMED by owner, same day
 
-Proposed name: Firstcall (not yet confirmed by owner). Real sourced research across all 4 service lines + bundle strategy. Full agent output archived in council session log; this file holds the final numbers and key caveats.
+Name: Firstcall (confirmed). Owner explicitly chose to run with this pricing now and adjust once real customers roll in, rather than delay for more research. Real sourced research across all 4 service lines + bundle strategy. Full agent output archived in council session log; this file holds the final numbers and key caveats.
 
 ## Recommended pricing
 
