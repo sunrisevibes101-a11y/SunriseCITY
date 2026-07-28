@@ -243,6 +243,47 @@ h1, h2, h3 { font-family: var(--display); text-transform: uppercase; letter-spac
 .badge-live { background: var(--accent); color: #fff; }
 .badge-soon { background: #fff; color: var(--muted); }
 
+/* our work */
+.work-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 22px;
+}
+.work-card {
+  display: block;
+  background: var(--card);
+  border: 3px solid var(--ink);
+  box-shadow: var(--shadow-sm);
+  text-decoration: none;
+  color: var(--ink);
+  overflow: hidden;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+.work-card:hover { transform: translate(4px, 4px); box-shadow: 0 0 0 var(--ink); }
+.work-preview {
+  height: 110px;
+  background: linear-gradient(135deg, var(--work-c1) 0%, var(--work-c1) 55%, var(--work-c2) 55%, var(--work-c2) 100%);
+  border-bottom: 3px solid var(--ink);
+  display: flex;
+  align-items: flex-end;
+  padding: 14px;
+}
+.work-tag {
+  background: #fff;
+  color: var(--ink);
+  font-size: 0.7rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 4px 10px;
+  border: 2px solid var(--ink);
+}
+.work-body { padding: 20px; }
+.work-body h3 { font-size: 1.1rem; margin: 0 0 8px; letter-spacing: 0.01em; }
+.work-body p { font-family: "Source Sans 3", sans-serif; font-size: 0.88rem; color: var(--muted); margin: 0 0 14px; }
+.work-link { font-weight: 800; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.02em; color: var(--accent-dark); }
+.work-card:hover .work-link { color: var(--ink); }
+
 /* process steps */
 .steps-grid {
   display: grid;
