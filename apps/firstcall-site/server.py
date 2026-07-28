@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 import json
 import os
+import urllib.request
+import urllib.error
+import urllib.parse
 from datetime import datetime, timezone
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -10,6 +13,61 @@ LEADS_JSON = ROOT / "leads.json"
 VAULT_LEADS = Path.home() / "Library/Mobile Documents/iCloud~md~obsidian/Documents/CLAUDE/CLAUDE/1 - Projects/Firstcall/Leads/leads-log.md"
 
 VAULT_HEADER = "# Leads Log\n\nCaptured from the Firstcall site's quote-request form. Newest first.\n\n"
+
+
+def _load_env():
+    env_file = ROOT / ".env"
+    if not env_file.exists():
+        return
+    for line in env_file.read_text().splitlines():
+        line = line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, _, value = line.partition("=")
+        os.environ.setdefault(key.strip(), value.strip())
+
+
+_load_env()
+STRIPE_SECRET_KEY = os.environ.get("STRIPE_SECRET_KEY", "")
+
+# Test-mode flat-rate offer. Keep in sync with the pricing shown on the site.
+CHECKOUT_ITEMS = {
+    "build": {"name": "Firstcall Website Build", "amount_cents": 99900, "mode": "payment"},
+}
+
+
+def create_checkout_session(item_key: str, origin: str):
+    item = CHECKOUT_ITEMS.get(item_key)
+    if not item or not STRIPE_SECRET_KEY:
+        return None, "checkout not configured"
+    form = {
+        "mode": item["mode"],
+        "line_items[0][price_data][currency]": "usd",
+        "line_items[0][price_data][product_data][name]": item["name"],
+        "line_items[0][price_data][unit_amount]": str(item["amount_cents"]),
+        "line_items[0][quantity]": "1",
+        "success_url": f"{origin}/?checkout=success",
+        "cancel_url": f"{origin}/?checkout=cancelled",
+    }
+    body = urllib.parse.urlencode(form).encode()
+    req = urllib.request.Request(
+        "https://api.stripe.com/v1/checkout/sessions",
+        data=body,
+        headers={
+            "Authorization": f"Bearer {STRIPE_SECRET_KEY}",
+            "Content-Type": "application/x-www-form-urlencoded",
+        },
+        method="POST",
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            data = json.loads(resp.read())
+            return data.get("url"), None
+    except urllib.error.HTTPError as e:
+        detail = e.read().decode(errors="ignore")
+        return None, f"stripe error: {detail[:300]}"
+    except Exception as e:
+        return None, f"request failed: {e}"
 
 
 def append_lead_json(entry: dict):
@@ -58,6 +116,18 @@ class Handler(BaseHTTPRequestHandler):
             append_lead_json(entry)
             prepend_lead_to_vault(entry)
             self._send_json(200, {"ok": True})
+        elif self.path == "/api/create-checkout-session":
+            length = int(self.headers.get("Content-Length", 0))
+            try:
+                data = json.loads(self.rfile.read(length)) if length else {}
+            except Exception:
+                data = {}
+            origin = f"http://{self.headers.get('Host', 'localhost:8500')}"
+            url, error = create_checkout_session(data.get("item", "build"), origin)
+            if error:
+                self._send_json(503, {"error": error})
+            else:
+                self._send_json(200, {"url": url})
         else:
             self._send_json(404, {"error": "not found"})
 
