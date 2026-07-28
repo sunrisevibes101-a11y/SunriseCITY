@@ -59,6 +59,7 @@ class City2D {
     const wrap = this.canvas.parentElement;
     this.canvas.width = wrap.clientWidth;
     this.canvas.height = wrap.clientHeight;
+    this._autoFitCamera();
   }
 
   setWalkMode(on) { this.walkMode = on; }
@@ -77,6 +78,7 @@ class City2D {
   }
 
   setProjects(projects) {
+    const isFirstLoad = this.buildings.size === 0;
     this._allProjects = projects;
     const seen = new Set();
     projects.forEach((p, i) => {
@@ -91,6 +93,26 @@ class City2D {
     for (const [name] of this.buildings) if (!seen.has(name)) this.buildings.delete(name);
     this._syncAgents(projects);
     this._syncPopulation(projects);
+    if (isFirstLoad && this.buildings.size) this._autoFitCamera();
+  }
+
+  // Frame every building (plus the fixed landmarks) inside the canvas, regardless of
+  // canvas size -- the SLOTS layout is fixed-pixel and was overflowing narrower canvases.
+  _autoFitCamera() {
+    const points = [COFFEE_POS, FIRE_POS, TRADE_POS];
+    for (const b of this.buildings.values()) points.push({ x: b.x, z: b.z, h: b.height });
+    let minU = Infinity, maxU = -Infinity, minV = Infinity, maxV = -Infinity;
+    for (const p of points) {
+      const u = (p.x - p.z) * (TILE_W / 2);
+      const v = (p.x + p.z) * (TILE_H / 2) - (p.h || 0);
+      minU = Math.min(minU, u); maxU = Math.max(maxU, u);
+      minV = Math.min(minV, v - 40); maxV = Math.max(maxV, v + 20);
+    }
+    const spanU = Math.max(1, maxU - minU), spanV = Math.max(1, maxV - minV);
+    const fitZoom = Math.min(this.canvas.width / spanU, this.canvas.height / spanV) * 0.82;
+    this.zoom = Math.max(0.5, Math.min(2.2, fitZoom));
+    this.camX = ((minU + maxU) / 2) * this.zoom;
+    this.camY = ((minV + maxV) / 2) * this.zoom;
   }
 
   _syncAgents(projects) {
