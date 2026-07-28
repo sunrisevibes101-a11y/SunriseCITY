@@ -331,7 +331,7 @@ function wireInstructBar() {
       if (!res.ok) throw new Error();
       input.value = '';
       status.hidden = false;
-      status.textContent = 'Saved — the team will see this next session (not instant).';
+      status.textContent = 'Saved to the inbox. For it to run now, ask Claude in chat — otherwise it runs within 24h via the daily routine.';
       clearTimeout(status._t);
       status._t = setTimeout(() => { status.hidden = true; }, 5000);
     } catch {
