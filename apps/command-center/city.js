@@ -202,14 +202,18 @@ class City {
   }
 
   _setupLights() {
-    this.ambientLight = new THREE.AmbientLight(0x5a4a8a, 1.1);
+    this.ambientLight = new THREE.AmbientLight(0x6a5aa0, 1.25);
     this.scene.add(this.ambientLight);
-    const point = new THREE.PointLight(COLORS.core, 3, 40);
+    const point = new THREE.PointLight(COLORS.core, 3.6, 44);
     point.position.set(0, 8, 0);
     this.scene.add(point);
-    this.sunLight = new THREE.DirectionalLight(0xbfa8ff, 0.5);
+    this.sunLight = new THREE.DirectionalLight(0xcfb8ff, 0.6);
     this.sunLight.position.set(12, 18, 6);
     this.scene.add(this.sunLight);
+    // Warm accent rim light so buildings/agents aren't all lit from one flat purple wash.
+    const rim = new THREE.PointLight(0xffb454, 1.6, 30);
+    rim.position.set(-10, 6, -10);
+    this.scene.add(rim);
   }
 
   _updateDayNight() {
@@ -751,7 +755,8 @@ class City {
           // Free-roam state: wander to random spots around town, pause, pick a new one.
           roamPos: COFFEE_POS.clone().add(new THREE.Vector3((Math.random() - 0.5) * 3, 0, (Math.random() - 0.5) * 3)),
           roamTarget: null,
-          roamPause: Math.random() * 3,
+          roamPause: Math.random() * 1.2,
+          pillar,
         };
         this.agents.set(name, a);
         i++;
@@ -782,18 +787,32 @@ class City {
   }
 
   updateActivity(projects) {
+    const isTargeted = (name) => [...this.agents.values()].some((a) => a.state !== 'idle' && a.target === name);
+    let assigned = false;
     projects.forEach((p) => {
       if (!p.queue || !p.queue.length) return;
-      const already = [...this.agents.values()].some((a) => a.state !== 'idle' && a.target === p.name);
-      if (already) return;
+      if (isTargeted(p.name)) return;
       const idleAgent = [...this.agents.values()].find((a) => a.state === 'idle');
       const building = this.buildings.get(p.name);
       if (idleAgent && building) {
         idleAgent.state = 'to-target';
         idleAgent.travelT = 0;
         idleAgent.target = p.name;
+        assigned = true;
       }
     });
+    // No pending approvals right now -- still send agents to work at projects with real
+    // recorded activity, so "working" isn't gated entirely on there being something to approve.
+    if (!assigned && Math.random() < 0.5) {
+      const active = projects.filter((p) =>
+        (p.council_count + p.content_count + p.research_count + p.leads_count) > 0 && !isTargeted(p.name));
+      const idleAgent = [...this.agents.values()].find((a) => a.state === 'idle');
+      if (idleAgent && active.length) {
+        const pick = active[Math.floor(Math.random() * active.length)];
+        const building = this.buildings.get(pick.name);
+        if (building) { idleAgent.state = 'to-target'; idleAgent.travelT = 0; idleAgent.target = pick.name; }
+      }
+    }
     this._updateChips();
   }
 
@@ -1126,9 +1145,9 @@ class City {
           const dist = dir.length();
           if (dist < 0.35) {
             agent.roamTarget = null;
-            agent.roamPause = 2 + Math.random() * 5;
+            agent.roamPause = 0.6 + Math.random() * 1.8;
           } else {
-            dir.normalize().multiplyScalar(Math.min(1.6 * dt, dist));
+            dir.normalize().multiplyScalar(Math.min(2.4 * dt, dist));
             agent.roamPos.add(dir);
             agent.mesh.rotation.y = Math.atan2(dir.x, dir.z);
           }
@@ -1139,7 +1158,7 @@ class City {
           agent.roamPos.z
         );
       } else if (agent.state === 'to-target' || agent.state === 'to-home') {
-        agent.travelT += dt * 0.3;
+        agent.travelT += dt * 0.45;
         const building = this.buildings.get(agent.target);
         if (!building) { agent.state = 'idle'; continue; }
         // Walk street-style: down to ground, along x, then along z -- not a straight float.
@@ -1161,13 +1180,18 @@ class City {
           if (agent.state === 'to-target') { agent.state = 'at-target'; agent.travelT = 0; }
           else {
             agent.state = 'idle'; agent.target = null;
-            agent.roamTarget = null; agent.roamPause = 1 + Math.random() * 3;
+            agent.roamTarget = null; agent.roamPause = 0.4 + Math.random() * 1.2;
+            if (agent.pillar) agent.pillar.material.opacity = 0.5;
             this._updateChips();
           }
         }
       } else if (agent.state === 'at-target') {
         agent.travelT += dt;
-        if (agent.travelT > 5) { agent.state = 'to-home'; agent.travelT = 0; }
+        // Visibly "working": brisk pulse and a little heads-down bob, distinct from idle roaming.
+        if (agent.pillar) agent.pillar.material.opacity = 0.55 + Math.abs(Math.sin(t * 9)) * 0.45;
+        agent.mesh.position.y = 0.06 + Math.abs(Math.sin(t * 10)) * 0.03;
+        agent.mesh.rotation.z = Math.sin(t * 9) * 0.05;
+        if (agent.travelT > 4) { agent.state = 'to-home'; agent.travelT = 0; agent.mesh.rotation.z = 0; }
       }
     }
 

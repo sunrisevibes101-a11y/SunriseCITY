@@ -145,13 +145,25 @@ class City2D {
   }
 
   updateActivity(projects) {
+    const isTargeted = (name) => [...this.agents.values()].some((a) => a.state !== 'idle' && a.target === name);
+    let assigned = false;
     projects.forEach((p) => {
       if (!p.queue || !p.queue.length) return;
-      const already = [...this.agents.values()].some((a) => a.state !== 'idle' && a.target === p.name);
-      if (already) return;
+      if (isTargeted(p.name)) return;
       const idle = [...this.agents.values()].find((a) => a.state === 'idle');
-      if (idle && this.buildings.has(p.name)) { idle.state = 'to-target'; idle.travelT = 0; idle.target = p.name; }
+      if (idle && this.buildings.has(p.name)) { idle.state = 'to-target'; idle.travelT = 0; idle.target = p.name; assigned = true; }
     });
+    // No pending approvals right now -- still send agents to work at projects with real
+    // recorded activity, so "working" isn't gated entirely on there being something to approve.
+    if (!assigned && Math.random() < 0.5) {
+      const active = projects.filter((p) =>
+        (p.council_count + p.content_count + p.research_count + p.leads_count) > 0 && !isTargeted(p.name));
+      const idle = [...this.agents.values()].find((a) => a.state === 'idle');
+      if (idle && active.length) {
+        const pick = active[Math.floor(Math.random() * active.length)];
+        if (this.buildings.has(pick.name)) { idle.state = 'to-target'; idle.travelT = 0; idle.target = pick.name; }
+      }
+    }
     this._updateChips();
   }
 
@@ -316,11 +328,11 @@ class City2D {
         } else {
           const dx = a.roamTarget.x - a.x, dz = a.roamTarget.z - a.z;
           const dist = Math.hypot(dx, dz);
-          if (dist < 0.3) { a.roamTarget = null; a.roamPause = 2 + Math.random() * 4; }
-          else { const s = Math.min(1.6 * dt, dist) / dist; a.x += dx * s; a.z += dz * s; }
+          if (dist < 0.3) { a.roamTarget = null; a.roamPause = 0.6 + Math.random() * 1.6; }
+          else { const s = Math.min(2.4 * dt, dist) / dist; a.x += dx * s; a.z += dz * s; }
         }
       } else if (a.state === 'to-target' || a.state === 'to-home') {
-        a.travelT += dt * 0.3;
+        a.travelT += dt * 0.45;
         const b = this.buildings.get(a.target);
         if (!b) { a.state = 'idle'; continue; }
         const start = a.state === 'to-target' ? { x: a.x, z: a.z } : { x: b.x, z: b.z };
@@ -330,11 +342,11 @@ class City2D {
         a.z = start.z + (end.z - start.z) * tt;
         if (tt >= 1) {
           if (a.state === 'to-target') { a.state = 'at-target'; a.travelT = 0; }
-          else { a.state = 'idle'; a.target = null; a.roamPause = 1; this._updateChips(); }
+          else { a.state = 'idle'; a.target = null; a.roamPause = 0.5; this._updateChips(); }
         }
       } else if (a.state === 'at-target') {
         a.travelT += dt;
-        if (a.travelT > 5) { a.state = 'to-home'; a.travelT = 0; }
+        if (a.travelT > 4) { a.state = 'to-home'; a.travelT = 0; }
       }
     }
   }
@@ -434,7 +446,7 @@ class City2D {
       drawables.push({ depth: x + z, draw: () => this._drawPerson(x, z, 0.5, c.color, null) });
     }
     for (const [, a] of this.agents) {
-      drawables.push({ depth: a.x + a.z + 0.1, draw: () => this._drawPerson(a.x, a.z, 1, a.data.color, a.data.char_name) });
+      drawables.push({ depth: a.x + a.z + 0.1, draw: () => this._drawPerson(a.x, a.z, 1, a.data.color, a.data.char_name, a.state === 'at-target') });
     }
     if (this.walkMode) {
       drawables.push({ depth: this.player.x + this.player.z + 0.2, draw: () => this._drawPerson(this.player.x, this.player.z, 1, '#ffffff', 'You') });
@@ -471,7 +483,7 @@ class City2D {
     this._drawLabel(this.ctx, sx, sy - height * s - 12, label);
   }
 
-  _drawPerson(x, z, hMul, color, label) {
+  _drawPerson(x, z, hMul, color, label, working = false) {
     const [sx, sy] = this.toScreen(x, z, 0);
     const s = this.zoom * hMul;
     // Simple standing figure: legs + torso + head, small but readable.
@@ -485,6 +497,19 @@ class City2D {
     this.ctx.beginPath();
     this.ctx.arc(sx, sy - 24 * s, 3.5 * s, 0, Math.PI * 2);
     this.ctx.fill();
+    if (working) {
+      // Pulsing "working here" ring, clearly distinct from idle roaming.
+      const pulse = 0.5 + Math.abs(Math.sin(this._t * 6)) * 0.5;
+      this.ctx.strokeStyle = `rgba(255,214,84,${0.4 + pulse * 0.5})`;
+      this.ctx.lineWidth = Math.max(1, 1.5 * s);
+      this.ctx.beginPath();
+      this.ctx.arc(sx, sy - 24 * s, (5 + pulse * 2.5) * s, 0, Math.PI * 2);
+      this.ctx.stroke();
+      this.ctx.fillStyle = '#ffd654';
+      this.ctx.font = `${Math.max(9, 9 * s)}px sans-serif`;
+      this.ctx.textAlign = 'center';
+      this.ctx.fillText('⚙', sx, sy - 34 * s);
+    }
     if (label) this._drawLabel(this.ctx, sx, sy - 32 * s, label, '#ffffff');
   }
 
