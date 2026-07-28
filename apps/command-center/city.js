@@ -882,23 +882,24 @@ class City {
       }
     }
 
+    // Recursive intersect -- building meshes carry a rim (LineSegments) and a label
+    // (Sprite) as children, and a raycast against the group's children can resolve to
+    // one of those instead of the box itself, so walk up to find the tracked mesh.
     const buildingMeshes = [...this.buildings.values()].map((b) => b.mesh);
-    const hits = this.raycaster.intersectObjects(buildingMeshes, false);
+    const hits = this.raycaster.intersectObjects(buildingMeshes, true);
     const tooltip = document.getElementById('city-tooltip');
     if (hits.length) {
-      const b = [...this.buildings.values()].find((bb) => bb.mesh === hits[0].object);
-      const p = b.data;
-      tooltip.hidden = false;
-      tooltip.style.left = `${e.clientX}px`;
-      tooltip.style.top = `${e.clientY}px`;
-      tooltip.innerHTML = `<strong>${p.name}</strong><br>Council: ${p.council_count} · Content: ${p.content_count} · Leads: ${p.leads_count} · Waiting: ${p.queue.length}<br><span style="text-decoration:underline;cursor:pointer" id="enter-link">Enter building →</span>`;
-      tooltip.style.pointerEvents = 'auto';
-      document.getElementById('enter-link').onclick = () => { tooltip.hidden = true; this.enterBuilding(p.name); };
-      clearTimeout(this._tooltipTimer);
-      this._tooltipTimer = setTimeout(() => { tooltip.hidden = true; }, 6000);
-    } else {
-      tooltip.hidden = true;
+      let node = hits[0].object;
+      while (node && !buildingMeshes.includes(node)) node = node.parent;
+      const b = [...this.buildings.values()].find((bb) => bb.mesh === node);
+      if (b) {
+        // One click, straight in -- no intermediate tooltip step to miss.
+        tooltip.hidden = true;
+        this.enterBuilding(b.data.name);
+        return;
+      }
     }
+    tooltip.hidden = true;
   }
 
   _showConversation(centerAgent) {
