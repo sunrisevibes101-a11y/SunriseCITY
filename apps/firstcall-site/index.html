@@ -4,32 +4,58 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Firstcall — Websites for Missouri &amp; South Dakota businesses</title>
+<meta name="description" content="Flat-rate, done-for-you websites for local trade businesses in Columbia MO and Sioux Falls SD. $999 to build, no sales call required to find out what it costs.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2222%22 fill=%22%2322303f%22/><text x=%2250%22 y=%2266%22 font-size=%2258%22 font-family=%22sans-serif%22 font-weight=%22800%22 fill=%22%23b5502e%22 text-anchor=%22middle%22>F</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <header class="topbar">
+  <header class="topbar" id="topbar">
     <div class="logo">Firstcall</div>
     <nav>
+      <a href="#compare">Why us</a>
       <a href="#services">Services</a>
       <a href="#pricing">Pricing</a>
-      <a href="#area">Service area</a>
+      <a href="#faq">FAQ</a>
       <a class="nav-cta" href="#quote">Get a quote</a>
     </nav>
   </header>
 
   <section class="hero">
+    <div class="hero-glow" aria-hidden="true"></div>
     <div class="hero-inner">
+      <p class="eyebrow">Columbia&nbsp;MO · Sioux&nbsp;Falls&nbsp;SD · +75mi</p>
       <h1>The one call for getting your business online.</h1>
-      <p class="subhead">We build your website — done for you, not another DIY tool to fight with. Based in the Midwest, serving Columbia&nbsp;MO, Sioux&nbsp;Falls&nbsp;SD, and everywhere in between.</p>
+      <p class="subhead">We build your website — done for you, not another DIY tool to fight with. Flat price, real humans, no sales call required to find out what it costs.</p>
       <div class="hero-actions">
         <a class="btn-primary" href="#quote">Get a free quote</a>
         <a class="btn-secondary" href="#pricing">See pricing</a>
       </div>
-      <p class="hero-note">Real prices below. No sales call required to find out what it costs.</p>
+      <p class="hero-note">$999 flat. No hidden fees. No contract to escape.</p>
     </div>
-  </header>
+    <div class="hero-mock" aria-hidden="true">
+      <div class="mock-browser">
+        <div class="mock-bar"><span></span><span></span><span></span><div class="mock-url">yourbusiness.com</div></div>
+        <div class="mock-body">
+          <div class="mock-nav"><div class="mock-logo"></div><div class="mock-links"><span></span><span></span><span></span></div></div>
+          <div class="mock-hero">
+            <div class="mock-line w60"></div>
+            <div class="mock-line w40"></div>
+            <div class="mock-cta"></div>
+          </div>
+          <div class="mock-cards">
+            <div class="mock-card"></div>
+            <div class="mock-card"></div>
+            <div class="mock-card"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
 
-  <section class="section trust">
+  <section class="section trust reveal">
     <div class="trust-grid">
       <div class="trust-item">
         <div class="trust-num">$999</div>
@@ -46,26 +72,72 @@
     </div>
   </section>
 
+  <section class="section alt" id="compare">
+    <h2 class="reveal">Why not just do it yourself?</h2>
+    <p class="section-lead reveal">Here's the honest comparison — we'll tell you when a DIY builder is genuinely fine for you.</p>
+    <div class="compare-grid reveal">
+      <div class="compare-col">
+        <div class="compare-head">DIY builder</div>
+        <ul>
+          <li class="neutral">Cheap up front</li>
+          <li class="bad">You build it — nights and weekends</li>
+          <li class="bad">Generic template, looks like a template</li>
+          <li class="bad">Stuck when something breaks</li>
+        </ul>
+      </div>
+      <div class="compare-col">
+        <div class="compare-head">Typical agency</div>
+        <ul>
+          <li class="bad">Quote hidden behind a sales call</li>
+          <li class="bad">$3,000–$8,000+ and weeks of back-and-forth</li>
+          <li class="neutral">Custom-built</li>
+          <li class="bad">Retainer required to change anything</li>
+        </ul>
+      </div>
+      <div class="compare-col featured">
+        <div class="compare-head">Firstcall</div>
+        <ul>
+          <li class="good">$999 flat, posted right here</li>
+          <li class="good">We build it — you just tell us about your business</li>
+          <li class="good">Custom-built, not a template</li>
+          <li class="good">$79/mo covers hosting + edits, no retainer games</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
   <section class="section" id="services">
-    <h2>What we do</h2>
-    <p class="section-lead">We start with your website. Once that's live and working, we can help with the rest.</p>
-    <div class="services-grid">
+    <h2 class="reveal">What we do</h2>
+    <p class="section-lead reveal">We start with your website. Once that's live and working, we can help with the rest.</p>
+    <div class="services-grid reveal">
       <div class="service-card live">
+        <div class="service-icon">
+          <svg viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="14" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M3 8h18" stroke="currentColor" stroke-width="1.6"/><path d="M7 14h6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+        </div>
         <div class="badge-live">Available now</div>
         <h3>Website Build</h3>
         <p>A real website for your business — built by people, not left to a template. Mobile-friendly, fast, and set up so customers can actually find and contact you.</p>
       </div>
       <div class="service-card">
+        <div class="service-icon">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M4 5c0 8 7 15 15 15l2-4-6-3-2 2c-2-1-4-3-5-5l2-2-3-6-4 1z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
+        </div>
         <div class="badge-soon">Coming soon</div>
         <h3>Phone Answering</h3>
         <p>Never miss a call. Books appointments and answers questions around the clock, so a ringing phone doesn't mean a lost job.</p>
       </div>
       <div class="service-card">
+        <div class="service-icon">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M3 18l5-5 4 3 5-7 4 4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 21h18" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+        </div>
         <div class="badge-soon">Coming soon</div>
         <h3>Advertising</h3>
         <p>Video ads that actually get made — no waiting weeks on a production crew, no guessing what to post.</p>
       </div>
       <div class="service-card">
+        <div class="service-icon">
+          <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8" stroke="currentColor" stroke-width="1.6"/><path d="M12 8v4l3 2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+        </div>
         <div class="badge-soon">Coming soon</div>
         <h3>Growth Bundle</h3>
         <p>Show up when people search for you locally — Google Business Profile, local search basics, and steady social posting.</p>
@@ -73,10 +145,37 @@
     </div>
   </section>
 
-  <section class="section alt" id="pricing">
-    <h2>Real pricing</h2>
-    <p class="section-lead">Every price below is what you'd actually pay. Nothing gated behind a sales call.</p>
-    <div class="pricing-grid">
+  <section class="section alt" id="process">
+    <h2 class="reveal">How it actually works</h2>
+    <p class="section-lead reveal">No sales call. No 40-page questionnaire. Four steps, start to live.</p>
+    <div class="steps-grid reveal">
+      <div class="step">
+        <div class="step-num">1</div>
+        <h3>Tell us about your business</h3>
+        <p>Fill out the form below — what you do, where you work, what you want visitors to do when they land on your site.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <h3>We build it</h3>
+        <p>A real site gets designed and built around your business — not dropped into a generic template.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <h3>You review</h3>
+        <p>We send it over before it's live. Tell us what to change — that's included, not an upcharge.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <h3>It goes live</h3>
+        <p>Your site goes live under $79/mo, which covers hosting and keeping it running — not just parking it somewhere.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="pricing">
+    <h2 class="reveal">Real pricing</h2>
+    <p class="section-lead reveal">Every price below is what you'd actually pay. Nothing gated behind a sales call.</p>
+    <div class="pricing-grid reveal">
       <div class="price-card featured">
         <div class="price-name">Website Build</div>
         <div class="price-amount">$999<span>one-time</span></div>
@@ -135,15 +234,37 @@
     </div>
   </section>
 
+  <section class="section alt" id="faq">
+    <h2 class="reveal">Questions people actually ask</h2>
+    <div class="faq-list reveal">
+      <details>
+        <summary>I already have a Facebook page — do I really need a website?</summary>
+        <p>A Facebook page works until a customer searches Google, wants to see your prices, or wants to book without messaging back and forth. A website is yours — nobody can change the algorithm on it.</p>
+      </details>
+      <details>
+        <summary>How long does it take to go live?</summary>
+        <p>We'll give you a real timeline once we know your business — it depends on how much back-and-forth the review step takes. There's no multi-month agency queue.</p>
+      </details>
+      <details>
+        <summary>What happens after the $999 build?</summary>
+        <p>Your site goes live on the $79/mo upkeep plan, which covers hosting and minor edits. No surprise renewal fees, no separate hosting bill from a third party.</p>
+      </details>
+      <details>
+        <summary>Is this a real business?</summary>
+        <p>Yes — Firstcall is a real, currently-launching agency based in the Midwest. We're honest that we're early: the website build service is live now, the other services (phone answering, advertising, growth bundle) are launching next, once the website side is proven out.</p>
+      </details>
+    </div>
+  </section>
+
   <section class="section" id="area">
-    <h2>Where we work</h2>
-    <p class="section-lead">Based in the Midwest, serving small businesses around two hubs — Columbia, Missouri and Sioux Falls, South Dakota — plus everywhere within about 75 miles of either.</p>
+    <h2 class="reveal">Where we work</h2>
+    <p class="section-lead reveal">Based in the Midwest, serving small businesses around two hubs — Columbia, Missouri and Sioux Falls, South Dakota — plus everywhere within about 75 miles of either.</p>
   </section>
 
   <section class="section alt" id="quote">
-    <h2>Get a free quote</h2>
-    <p class="section-lead">Tell us about your business — we'll get back to you with a real quote, not a sales pitch. This is a demo form; real submissions save locally, nothing is sent anywhere yet.</p>
-    <form id="lead-form">
+    <h2 class="reveal">Get a free quote</h2>
+    <p class="section-lead reveal">Tell us about your business — we'll get back to you with a real quote, not a sales pitch.</p>
+    <form id="lead-form" class="reveal">
       <input type="text" name="name" placeholder="Your name" required>
       <input type="text" name="business" placeholder="Business name" required>
       <input type="tel" name="phone" placeholder="Phone number" required>
@@ -155,7 +276,7 @@
   </section>
 
   <footer>
-    <p>Firstcall — websites for Missouri &amp; South Dakota businesses. Demo site.</p>
+    <p>Firstcall — websites for Missouri &amp; South Dakota businesses.</p>
   </footer>
 
   <script src="app.js"></script>
