@@ -292,11 +292,45 @@ function renderMoney(projects) {
   notice.innerHTML = 'No revenue or payment source is connected (no Stripe/QuickBooks/PayPal) — there is no real "money made" figure to show yet. What you see below is real: leads captured through the site forms.';
 }
 
+function renderOrb(s) {
+  const roster = s.roster || [];
+  if (!roster.length) return;
+  // "Active" reflects real signal: a project waiting on you, or touched recently.
+  const now = Date.now();
+  const busyProjects = s.projects.filter((p) => p.queue.length > 0 ||
+    (p.last_active && (now - new Date(p.last_active).getTime()) < 4 * 3600 * 1000));
+  const activityLevel = s.projects.reduce((a, p) => a + p.council_count + p.content_count + p.research_count + p.leads_count, 0);
+  const activeCount = Math.min(roster.length, busyProjects.length || (activityLevel > 0 ? 1 : 0));
+  // Deterministic rotation so it isn't the same agents lit every refresh.
+  const rotation = Math.floor(now / 15000) % roster.length;
+  const agents = roster.map((a, i) => ({
+    name: a.name,
+    label: (a.char_name || a.name).slice(0, 10),
+    color: a.color || '#5cc8ff',
+    active: ((i + rotation) % roster.length) < activeCount,
+  }));
+  const pulse = Math.min(1, activityLevel / 20 + (busyProjects.length ? 0.4 : 0));
+  if (window.__updateOrb) window.__updateOrb(agents, pulse);
+  renderChips(agents, busyProjects.length > 0);
+}
+
+function renderChips(agents, systemBusy) {
+  const bar = document.getElementById('chips-bar');
+  if (!bar) return;
+  bar.innerHTML = agents.map((a) => `
+    <div class="chip ${a.active ? 'active' : ''}">
+      <span class="chip-dot" style="background:${a.color}"></span>
+      <strong>${a.label}</strong>
+      <span class="chip-status">${a.active ? 'ACTIVE' : 'STANDBY'}</span>
+    </div>
+  `).join('') + `<div class="chip system-chip">${systemBusy ? 'PROCESSING REAL WORK' : 'MONITORING'}</div>`;
+}
+
 async function refresh() {
   try {
     const res = await fetch('/api/status');
     const s = await res.json();
-    document.getElementById('agent-status').innerHTML = `Agent core: <span class="dot"></span> vault ${s.vault_found ? 'connected' : 'not found'} · ${s.projects.length} project${s.projects.length === 1 ? '' : 's'}`;
+    document.getElementById('agent-status').innerHTML = `AGENT CORE: <span class="dot"></span> VAULT ${s.vault_found ? 'CONNECTED' : 'NOT FOUND'} · ${s.projects.length} PROJECT${s.projects.length === 1 ? '' : 'S'}`;
     renderVitals(s);
     renderRoster(s.roster);
     renderProjects(s.projects);
@@ -308,8 +342,9 @@ async function refresh() {
     renderPosted(s.posted);
     renderRevenue(s.projects);
     renderLeadsTable(s.projects);
+    renderOrb(s);
   } catch (err) {
-    document.getElementById('agent-status').textContent = 'Agent core: offline (server not reachable)';
+    document.getElementById('agent-status').textContent = 'AGENT CORE: OFFLINE (SERVER NOT REACHABLE)';
   }
 }
 
@@ -343,5 +378,6 @@ function wireInstructBar() {
 
 wireTabs();
 wireInstructBar();
+if (window.__startOrb) window.__startOrb(document.getElementById('orb-canvas'));
 refresh();
 setInterval(refresh, 15000);
