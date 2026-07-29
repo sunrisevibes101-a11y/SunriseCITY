@@ -343,6 +343,12 @@ async function refresh() {
     renderRevenue(s.projects);
     renderLeadsTable(s.projects);
     renderOrb(s);
+    const input = document.getElementById('instruct-input');
+    if (input) {
+      input.placeholder = s.auto_run_enabled
+        ? 'Tell the team what to do... (runs for real the moment you hit Send)'
+        : 'Tell the team what to do... (saved instantly; for it to run right now, ask Claude in chat)';
+    }
   } catch (err) {
     document.getElementById('agent-status').textContent = 'AGENT CORE: OFFLINE (SERVER NOT REACHABLE)';
   }
@@ -364,11 +370,14 @@ function wireInstructBar() {
         body: JSON.stringify({ text }),
       });
       if (!res.ok) throw new Error();
+      const data = await res.json();
       input.value = '';
       status.hidden = false;
-      status.textContent = 'Saved to the inbox. For it to run now, ask Claude in chat — otherwise it runs within 24h via the daily routine.';
+      status.textContent = data.auto_run
+        ? 'Running now — check the Activity tab in a bit for what it did.'
+        : 'Saved to the inbox. For it to run now, ask Claude in chat — otherwise it runs within 24h via the daily routine.';
       clearTimeout(status._t);
-      status._t = setTimeout(() => { status.hidden = true; }, 5000);
+      status._t = setTimeout(() => { status.hidden = true; }, 6000);
     } catch {
       status.hidden = false;
       status.textContent = 'Failed to save — is the server running?';

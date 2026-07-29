@@ -2,6 +2,10 @@
 import json
 import os
 import re
+import threading
+import time as time_module
+import traceback
+import urllib.error
 import urllib.request
 from datetime import datetime, timezone
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -11,7 +15,25 @@ ROOT = Path(__file__).parent
 VAULT = Path.home() / "Library/Mobile Documents/iCloud~md~obsidian/Documents/CLAUDE/CLAUDE"
 CLAUDE_DIR = Path.home() / ".claude"
 PROJECTS_DIR = VAULT / "1 - Projects"
+SUNRISECITY_REPO = Path.home() / "SunriseCITY"
 MAX_HIRES_PER_PROJECT = 10
+
+
+def _load_env():
+    env_file = ROOT / ".env"
+    if not env_file.exists():
+        return
+    for line in env_file.read_text().splitlines():
+        line = line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, _, value = line.partition("=")
+        os.environ.setdefault(key.strip(), value.strip())
+
+
+_load_env()
+ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
+AUTO_RUN_LOG = VAULT / "0 - Inbox" / "Auto-Run Log.md"
 
 # Sioux Falls, SD -- largest city in the state, used as the real-weather reference point.
 WEATHER_LAT, WEATHER_LON = 43.5446, -96.7311
@@ -414,6 +436,7 @@ def build_status():
         "weather": get_weather(),
         "trading": get_trading_status(),
         "instructions": _read_instructions(),
+        "auto_run_enabled": bool(ANTHROPIC_API_KEY),
         "posted": _parse_posted_log()[:20],
         "links": [
             {"label": "🌐 Demo site (lead form)", "url": "http://localhost:8420"},
@@ -444,7 +467,11 @@ def add_instruction(text: str):
     text = text.strip()
     if not text:
         return False, "empty"
-    header = "# Owner Instructions\n\nMessages typed into the Command Center dashboard, for a Claude Code session (manual or the daily SunriseCITY run) to read and act on. Newest first. Nothing here executes automatically by itself -- it's picked up the next time an agent session runs, same approval rules as everything else apply.\n\n"
+    header = (
+        "# Owner Instructions\n\nMessages typed into the Command Center dashboard. Newest first. "
+        + ("If an Anthropic API key is configured, each one triggers a real agent run automatically (see Auto-Run Log.md) -- " if ANTHROPIC_API_KEY else "Nothing here executes automatically by itself -- ")
+        + "same approval rules as everything else apply either way (nothing real-world happens without landing in the approval queue first).\n\n"
+    )
     block = f"## {datetime.now(timezone.utc).isoformat()}\n{text}\n\n"
     if INSTRUCTIONS_FILE.exists():
         existing = INSTRUCTIONS_FILE.read_text()
@@ -458,6 +485,147 @@ def add_instruction(text: str):
         new = header + block
     INSTRUCTIONS_FILE.write_text(new)
     return True, "saved"
+
+
+# --- Real execution for the dashboard instruct bar. Only runs if an
+# ANTHROPIC_API_KEY is configured in .env (owner-provided, never auto-generated).
+# Same hard rules as every other agent in this system: no account creation, no
+# auto-posting/auto-spending, real-world side effects land in the approval queue.
+
+AGENT_SYSTEM_PROMPT = """You are a background worker triggered by a real person typing into the Command Center dashboard's instruct box for the SunriseCITY project. Do exactly what they asked, using the tools available -- vault path: {vault}, SunriseCITY repo path: {repo}.
+
+Hard rules, no exceptions:
+- Never create accounts (social, financial, email) or authorize/connect anything -- that's the owner's action alone.
+- Never auto-post to social media, send real emails, or spend real money. Draft/prepare, then stop -- real-world side effects land in the vault for the owner to review and execute themselves.
+- Never fabricate business facts, leads, testimonials, or statistics. If you don't know something, say so or research it for real.
+- Work fast and stay scoped to exactly what was asked -- this runs unattended and costs real API usage per call, so don't wander into unrelated work.
+- If you edit code in the SunriseCITY repo, commit your changes with git (add the specific files, not -A) so the work isn't lost -- but do not push unless the instruction explicitly asks for that.
+
+End with a short plain-text summary of what you actually did.""".format(vault=VAULT, repo=SUNRISECITY_REPO)
+
+AGENT_TOOLS = [
+    {
+        "name": "read_file",
+        "description": "Read a file's full contents. Path must be an absolute path inside the vault or the SunriseCITY repo.",
+        "input_schema": {
+            "type": "object",
+            "properties": {"path": {"type": "string"}},
+            "required": ["path"],
+        },
+    },
+    {
+        "name": "write_file",
+        "description": "Write (create or overwrite) a file's full contents. Path must be an absolute path inside the vault or the SunriseCITY repo. Creates parent directories if needed.",
+        "input_schema": {
+            "type": "object",
+            "properties": {"path": {"type": "string"}, "content": {"type": "string"}},
+            "required": ["path", "content"],
+        },
+    },
+    {
+        "name": "run_command",
+        "description": "Run a shell command. Working directory defaults to the SunriseCITY repo. 60s timeout.",
+        "input_schema": {
+            "type": "object",
+            "properties": {"command": {"type": "string"}},
+            "required": ["command"],
+        },
+    },
+]
+
+
+def _safe_path(raw_path: str) -> Path:
+    p = Path(raw_path).expanduser().resolve()
+    if VAULT not in p.parents and p != VAULT and SUNRISECITY_REPO not in p.parents and p != SUNRISECITY_REPO:
+        raise ValueError(f"path must be inside the vault or the SunriseCITY repo, got: {p}")
+    return p
+
+
+def _run_tool(name: str, tool_input: dict) -> str:
+    try:
+        if name == "read_file":
+            p = _safe_path(tool_input["path"])
+            if not p.exists():
+                return f"error: {p} does not exist"
+            return p.read_text(errors="ignore")[:20000]
+        if name == "write_file":
+            p = _safe_path(tool_input["path"])
+            p.parent.mkdir(parents=True, exist_ok=True)
+            p.write_text(tool_input["content"])
+            return f"wrote {len(tool_input['content'])} chars to {p}"
+        if name == "run_command":
+            import subprocess
+            result = subprocess.run(
+                tool_input["command"], shell=True, cwd=SUNRISECITY_REPO,
+                capture_output=True, text=True, timeout=60,
+            )
+            out = (result.stdout or "") + (result.stderr or "")
+            return f"exit {result.returncode}\n{out[:8000]}"
+        return f"error: unknown tool {name}"
+    except Exception as e:
+        return f"error: {e}"
+
+
+def _call_anthropic(messages):
+    body = json.dumps({
+        "model": "claude-sonnet-5",
+        "max_tokens": 4096,
+        "system": AGENT_SYSTEM_PROMPT,
+        "tools": AGENT_TOOLS,
+        "messages": messages,
+    }).encode()
+    req = urllib.request.Request(
+        "https://api.anthropic.com/v1/messages",
+        data=body,
+        headers={
+            "x-api-key": ANTHROPIC_API_KEY,
+            "anthropic-version": "2023-06-01",
+            "content-type": "application/json",
+        },
+        method="POST",
+    )
+    with urllib.request.urlopen(req, timeout=120) as resp:
+        return json.loads(resp.read())
+
+
+def _agent_log(instruction: str, summary: str, error: str = None):
+    AUTO_RUN_LOG.parent.mkdir(parents=True, exist_ok=True)
+    header = "# Auto-Run Log\n\nReal agent runs triggered by the dashboard instruct box. Newest first.\n\n"
+    status = f"FAILED: {error}" if error else "done"
+    block = f"## {datetime.now(timezone.utc).isoformat()} -- {status}\n**Asked:** {instruction}\n\n{summary}\n\n"
+    existing = AUTO_RUN_LOG.read_text() if AUTO_RUN_LOG.exists() else header
+    if existing.startswith("# Auto-Run Log"):
+        head, sep, rest = existing.partition("\n\n")
+        AUTO_RUN_LOG.write_text(head + sep + block + rest)
+    else:
+        AUTO_RUN_LOG.write_text(header + block)
+
+
+def run_agent_task(instruction: str):
+    if not ANTHROPIC_API_KEY:
+        return
+    messages = [{"role": "user", "content": instruction}]
+    try:
+        for _turn in range(15):
+            resp = _call_anthropic(messages)
+            if "error" in resp:
+                _agent_log(instruction, "", error=json.dumps(resp["error"]))
+                return
+            content = resp.get("content", [])
+            messages.append({"role": "assistant", "content": content})
+            tool_uses = [b for b in content if b.get("type") == "tool_use"]
+            if not tool_uses:
+                text = "\n".join(b.get("text", "") for b in content if b.get("type") == "text")
+                _agent_log(instruction, text or "(no summary returned)")
+                return
+            tool_results = []
+            for tu in tool_uses:
+                result = _run_tool(tu["name"], tu.get("input", {}))
+                tool_results.append({"type": "tool_result", "tool_use_id": tu["id"], "content": result})
+            messages.append({"role": "user", "content": tool_results})
+        _agent_log(instruction, "Stopped after 15 tool-use turns (safety cap) -- may be incomplete.")
+    except Exception as e:
+        _agent_log(instruction, "", error=f"{e}\n{traceback.format_exc()[-800:]}")
 
 
 POSTED_LOG = VAULT / "3 - Resources" / "Posted Log.md"
@@ -590,11 +758,15 @@ class Handler(BaseHTTPRequestHandler):
             length = int(self.headers.get("Content-Length", 0))
             try:
                 data = json.loads(self.rfile.read(length))
-                ok, msg = add_instruction(data.get("text", ""))
+                text = data.get("text", "")
+                ok, msg = add_instruction(text)
             except Exception:
                 self._send_json(400, {"error": "invalid request"})
                 return
-            self._send_json(200 if ok else 400, {"ok": ok, "message": msg})
+            if ok and ANTHROPIC_API_KEY:
+                threading.Thread(target=run_agent_task, args=(text.strip(),), daemon=True).start()
+                msg = "saved, running now"
+            self._send_json(200 if ok else 400, {"ok": ok, "message": msg, "auto_run": bool(ANTHROPIC_API_KEY)})
             return
         self._send_json(404, {"error": "not found"})
 
